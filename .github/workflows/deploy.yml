@@ -17,9 +17,13 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v20.20.1/bin
+            script: |
+             cd /home/ubuntu/hello-api
+             git pull origin main
 
-            cd /home/ubuntu/hello-api
-            git pull origin main
-            npm install
-            pm2 restart server.js
+             docker build -t hello-api .
+
+             docker stop hello-api-container || true
+             docker rm hello-api-container || true
+
+             docker run -d -p 127.0.0.1:3000:3000 --name hello-api-container hello-api
