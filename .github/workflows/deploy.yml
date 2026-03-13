@@ -30,11 +30,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull kamalpant100/hello-api:latest
-
-            docker stop hello-api-container || true
-            docker rm hello-api-container || true
-
-            docker run -d -p 127.0.0.1:3000:3000 \
-            --name hello-api-container \
-            kamalpant100/hello-api:latest
+            cd /home/ubuntu/hello-api
+            docker compose pull
+            docker compose down
+            docker compose up -d
