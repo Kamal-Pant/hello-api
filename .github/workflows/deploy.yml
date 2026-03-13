@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy Docker Container
 
 on:
   push:
@@ -6,23 +6,35 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to EC2 server
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build Docker image
+        run: docker build -t kamalpant100/hello-api:latest .
+
+      - name: Push image to DockerHub
+        run: docker push kamalpant100/hello-api:latest
+
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-             cd /home/ubuntu/hello-api
-             git pull origin main
+            docker pull kamalpant100/hello-api:latest
 
-             docker build -t hello-api .
+            docker stop hello-api-container || true
+            docker rm hello-api-container || true
 
-             docker stop hello-api-container || true
-             docker rm hello-api-container || true
-
-             docker run -d -p 127.0.0.1:3000:3000 --name hello-api-container hello-api
+            docker run -d -p 127.0.0.1:3000:3000 \
+            --name hello-api-container \
+            kamalpant100/hello-api:latest
