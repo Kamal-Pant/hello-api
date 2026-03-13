@@ -1,18 +1,32 @@
 const express = require("express");
+const redis = require("redis");
 
 const app = express();
 
-app.get("/", (req, res) => {
-	  res.send("Hello ji from Kamal DevOps Lab 🚀(Docker)");
+const client = redis.createClient({
+  url: "redis://redis:6379"
 });
 
-app.get("/health", (req, res) => {
-	  res.json({
-		      status: "OK",
-		      service: "hello-api",
-		    });
+client.connect();
+
+app.get("/", async (req, res) => {
+
+  const cached = await client.get("homepage");
+
+  if (cached) {
+    return res.send("From Redis Cache: " + cached);
+  }
+
+  const response = "Hello from Node API " + new Date();
+
+  await client.set("homepage", response, {
+    EX: 60
+  });
+
+  res.send("Fresh Response: " + response);
+
 });
 
 app.listen(3000, () => {
-	  console.log("Server running on port 3000");
+  console.log("Server running on port 3000");
 });
