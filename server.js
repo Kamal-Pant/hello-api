@@ -4,6 +4,11 @@ const { Pool } = require("pg");
 
 const app = express();
 
+/* Prometheus */
+const client = require("prom-client");
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
+
 /* Redis */
 const redisClient = redis.createClient({
   url: process.env.REDIS_URL
@@ -67,6 +72,11 @@ app.get("/health", (req, res) => {
     status: "ok",
     time: new Date()
   });
+});
+
+app.get("/metrics", async (req, res) => {
+  res.set("Content-Type", client.register.contentType);
+  res.end(await client.register.metrics());
 });
 
 
