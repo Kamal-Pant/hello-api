@@ -6,18 +6,19 @@ const app = express();
 
 /* Redis */
 const redisClient = redis.createClient({
-  url: "redis://redis:6379"
+  url: process.env.REDIS_URL
 });
 redisClient.connect();
 
 /* Postgres */
 const pool = new Pool({
-  host: "postgres",
-  port: 5432,
-  user: "postgres",
-  password: "postgres",
-  database: "appdb"
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 });
+
 
 app.get("/", async (req, res) => {
 
