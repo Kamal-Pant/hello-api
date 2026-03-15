@@ -19,6 +19,28 @@ const pool = new Pool({
   database: process.env.DB_NAME
 });
 
+const amqp = require("amqplib");
+
+async function publishJob(message) {
+  const connection = await amqp.connect("amqp://rabbitmq");
+  const channel = await connection.createChannel();
+
+  const queue = "jobs";
+
+  await channel.assertQueue(queue);
+
+  channel.sendToQueue(queue, Buffer.from(message));
+
+  console.log("Job sent:", message);
+}
+
+app.get("/job", async (req, res) => {
+
+  await publishJob("process-order");
+
+  res.send("Job published to RabbitMQ");
+
+});
 
 app.get("/", async (req, res) => {
 
