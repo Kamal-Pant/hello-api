@@ -23,6 +23,13 @@ jobs:
       - name: Push image to DockerHub
         run: docker push kamalpant100/hello-api:latest
 
+      - name: Build worker image
+        run: docker build -t kamalpant100/hello-worker:latest ./worker
+
+      - name: Push worker image
+        run: docker push kamalpant100/hello-worker:latest
+
+
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
