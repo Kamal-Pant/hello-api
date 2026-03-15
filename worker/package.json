@@ -1,0 +1,9 @@
+{
+  "name": "worker-service",
+  "version": "1.0.0",
+  "main": "worker.js",
+  "dependencies": {
+    "amqplib": "^0.10.3"
+  }
+}
+
