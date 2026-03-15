@@ -1,32 +1,45 @@
 const express = require("express");
 const redis = require("redis");
+const { Pool } = require("pg");
 
 const app = express();
 
-const client = redis.createClient({
+/* Redis */
+const redisClient = redis.createClient({
   url: "redis://redis:6379"
 });
+redisClient.connect();
 
-client.connect();
+/* Postgres */
+const pool = new Pool({
+  host: "postgres",
+  port: 5432,
+  user: "postgres",
+  password: "postgres",
+  database: "appdb"
+});
 
 app.get("/", async (req, res) => {
 
-  const cached = await client.get("homepage");
+  const cached = await redisClient.get("homepage");
 
   if (cached) {
     return res.send("From Redis Cache: " + cached);
   }
 
-  const response = "Hello from Node API " + new Date();
+  const result = await pool.query("SELECT NOW()");
 
-  await client.set("homepage", response, {
+  const response = "Fresh Response - DB Time: " + result.rows[0].now;
+
+  await redisClient.set("homepage", response, {
     EX: 60
   });
 
-  res.send("Fresh Response: " + response);
+  res.send(response);
 
 });
 
 app.listen(3000, () => {
   console.log("Server running on port 3000");
 });
+
