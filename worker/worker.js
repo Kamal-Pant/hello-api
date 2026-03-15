@@ -2,28 +2,40 @@ const amqp = require("amqplib");
 
 async function startWorker() {
 
-  const connection = await amqp.connect("amqp://rabbitmq");
-  const channel = await connection.createChannel();
+  while (true) {
+    try {
 
-  const queue = "jobs";
+      const connection = await amqp.connect("amqp://rabbitmq");
+      const channel = await connection.createChannel();
 
-  await channel.assertQueue(queue);
+      const queue = "jobs";
 
-  console.log("Worker waiting for messages...");
+      await channel.assertQueue(queue);
 
-  channel.consume(queue, (msg) => {
+      console.log("Worker connected. Waiting for messages...");
 
-    const job = msg.content.toString();
+      channel.consume(queue, (msg) => {
 
-    console.log("Processing job:", job);
+        const job = msg.content.toString();
 
-    // simulate job processing
-    setTimeout(() => {
-      console.log("Job completed:", job);
-      channel.ack(msg);
-    }, 2000);
+        console.log("Processing job:", job);
 
-  });
+        setTimeout(() => {
+          console.log("Job completed:", job);
+          channel.ack(msg);
+        }, 2000);
+
+      });
+
+      break;
+
+    } catch (err) {
+
+      console.log("RabbitMQ not ready, retrying in 5 seconds...");
+      await new Promise(r => setTimeout(r, 5000));
+
+    }
+  }
 
 }
 
